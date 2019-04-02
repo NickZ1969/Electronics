@@ -902,7 +902,6 @@ case 3:
       pinCoil2 = 38; //Pin for coil 2
       pinCoil3 = 52; //Pin for coil 3
       pinCoil4 = 50; //Pin for coil 4
-      pinCoil5 = 34; //Pin for coil 5 PLACEHOLDER value for now
       pinTrigger = 19; //The CAS pin
       pinTrigger2 = 18; //The Cam Sensor pin
       pinTPS = A2;//TPS input pin
@@ -911,20 +910,12 @@ case 3:
       pinCLT = A1; //CLS sensor pin
       pinO2 = A8; //O2 Sensor pin
       pinBat = A4; //Battery reference voltage pin
-      pinDisplayReset = 48; // OLED reset pin
-      pinTachOut = 49; //Tacho output pin  (Goes to ULN2803)
-      pinIdle1 = 5; //Single wire idle control
-      pinIdle2 = 6; //2 wire idle control
-      pinBoost = 7; //Boost control
-      pinVVT_1 = 4; //Default VVT output
+      pinTachOut = 28; //Tacho output pin  (Goes to ULN2803)
       pinFuelPump = 45; //Fuel pump output  (Goes to ULN2803)
       pinStepperDir = 16; //Direction pin  for DRV8825 driver
       pinStepperStep = 17; //Step pin for DRV8825 driver
       pinStepperEnable = 24; //Enable pin for DRV8825
-      pinFan = 47; //Pin for the fan output (Goes to ULN2803)
-      pinLaunch = 51; //Can be overwritten below
-      pinFlex = 2; // Flex sensor (Must be external interrupt enabled)
-      pinResetControl = 43; //Reset control output
+      pinFan = 27; //Pin for the fan output (Goes to ULN2803)
 
       #if defined(CORE_TEENSY)
       pinInjector1 = 5; //Output pin injector 1 is on
@@ -953,6 +944,7 @@ case 3:
       pinFuelPump = 37; //Fuel pump output  (Goes to ULN2803)
       pinBoost = 2; //Boost control
       pinO2 = A22;  //O2 Sensor pin
+      pinBaro = A21 //Baro sensor
       
       #elif defined(STM32F4)
         //Black F407VE http://wiki.stm32duino.com/index.php?title=STM32F407
