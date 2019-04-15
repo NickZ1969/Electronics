@@ -720,6 +720,7 @@ void initialiseAll()
     case IGN_MODE_ROTARY:
         if(configPage10.rotaryType == ROTARY_IGN_FC)
         {
+          //Ignition channel 1 is a wasted spark signal for leading signal on both rotors
           ign1StartFunction = beginCoil1Charge;
           ign1EndFunction = endCoil1Charge;
           ign2StartFunction = beginCoil1Charge;
@@ -729,6 +730,41 @@ void initialiseAll()
           ign3EndFunction = endTrailingCoilCharge1;
           ign4StartFunction = beginTrailingCoilCharge;
           ign4EndFunction = endTrailingCoilCharge2;
+        }
+        else if(configPage10.rotaryType == ROTARY_IGN_FD)
+        {
+          //Ignition channel 1 is a wasted spark signal for leading signal on both rotors
+          ign1StartFunction = beginCoil1Charge;
+          ign1EndFunction = endCoil1Charge;
+          ign2StartFunction = beginCoil1Charge;
+          ign2EndFunction = endCoil1Charge;
+
+          //Trailing coils have their own channel each
+          //IGN2 = front rotor trailing spark
+          ign3StartFunction = beginCoil2Charge;
+          ign3EndFunction = endCoil2Charge;
+          //IGN3 = rear rotor trailing spark
+          ign4StartFunction = beginCoil3Charge;
+          ign4EndFunction = endCoil3Charge;
+
+          //IGN4 not used
+        }
+        else if(configPage10.rotaryType == ROTARY_IGN_RX8)
+        {
+          //RX8 outputs are simply 1 coil and 1 output per plug
+
+          //IGN1 is front rotor, leading spark
+          ign1StartFunction = beginCoil1Charge;
+          ign1EndFunction = endCoil1Charge;
+          //IGN2 is rear rotor, leading spark
+          ign2StartFunction = beginCoil2Charge;
+          ign2EndFunction = endCoil2Charge;
+          //IGN3 = front rotor trailing spark
+          ign3StartFunction = beginCoil3Charge;
+          ign3EndFunction = endCoil3Charge;
+          //IGN4 = rear rotor trailing spark
+          ign4StartFunction = beginCoil4Charge;
+          ign4EndFunction = endCoil4Charge;
         }
         break;
 
@@ -891,41 +927,26 @@ void setPinMapping(byte boardID)
     #endif
       break;
 
-case 3:
+    case 3:
       //Pin mappings as per the v0.4 shield
-      pinInjector1 = 8; //Output pin injector 1 is on
-      pinInjector2 = 9; //Output pin injector 2 is on
-      pinInjector3 = 10; //Output pin injector 3 is on
-      pinInjector4 = 11; //Output pin injector 4 is on
-      pinInjector5 = 12; //Output pin injector 5 is on
-      pinCoil1 = 40; //Pin for coil 1
-      pinCoil2 = 38; //Pin for coil 2
-      pinCoil3 = 52; //Pin for coil 3
-      pinCoil4 = 50; //Pin for coil 4
-      pinTrigger = 19; //The CAS pin
-      pinTrigger2 = 18; //The Cam Sensor pin
+      pinLaunch = 51; //Can be overwritten below
+      #if defined(CORE_TEENSY)
+    //Pin mappings Teensy 8x8 shield
       pinTPS = A2;//TPS input pin
       pinMAP = A3; //MAP sensor pin
       pinIAT = A0; //IAT sensor pin
       pinCLT = A1; //CLS sensor pin
-      pinO2 = A8; //O2 Sensor pin
       pinBat = A4; //Battery reference voltage pin
-      pinTachOut = 28; //Tacho output pin  (Goes to ULN2803)
-      pinFuelPump = 45; //Fuel pump output  (Goes to ULN2803)
-      pinStepperDir = 16; //Direction pin  for DRV8825 driver
-      pinStepperStep = 17; //Step pin for DRV8825 driver
-      pinStepperEnable = 24; //Enable pin for DRV8825
-      pinFan = 27; //Pin for the fan output (Goes to ULN2803)
-
-      #if defined(CORE_TEENSY)
+      pinBaro = A10; //Baro sensor pin
+      pinLaunch = 51; //Can be overwritten below
       pinInjector1 = 5; //Output pin injector 1 is on
       pinInjector2 = 6; //Output pin injector 2 is on
       pinInjector3 = 7; //Output pin injector 3 is on
       pinInjector4 = 8; //Output pin injector 4 is on
       pinInjector5 = 22; //Output pin injector 5 is on
       pinInjector6 = 21; //Output pin injector 6 is on
-      pinInjector7 = 11; //Output pin injector 7 is on
-      pinInjector8 = 12; //Output pin injector 8 is on     
+      pinIdle1 = 11; //Single wire idle control
+      pinIdle2 = 12; //Single wire idle control     
       pinCoil1 = 31; //Pin for coil 1
       pinCoil2 = 38; //Pin for coil 2
       pinCoil3 = 30; //Pin for coil 3
@@ -942,10 +963,14 @@ case 3:
       pinTachOut = 28; //output  (Goes to ULN2803)
       pinFan = 27; //output  (Goes to ULN2803)
       pinFuelPump = 37; //Fuel pump output  (Goes to ULN2803)
-      pinBoost = 2; //Boost control
       pinO2 = A22;  //O2 Sensor pin
-      pinBaro = A21 //Baro sensor
-      
+      pinSpareLOut1 = 2; //low current output spare1
+      pinSpareLOut2 = 39; //low current output spare2
+      pinSpareLOut3 = 1; //HIGH current output spare1
+      pinSpareTemp1 = A6;
+      pinSpareTemp2 = A5;
+      pinSpareLOut4 = 13; //Hardware In out Switched
+        
       #elif defined(STM32F4)
         //Black F407VE http://wiki.stm32duino.com/index.php?title=STM32F407
         //PC8~PC12 SDio
@@ -1112,7 +1137,7 @@ case 3:
       break;
 
     case 20:
-    #ifndef SMALL_FLASH_MODE //No support for bluepill here anyway
+    #if defined(CORE_AVR) && !defined(SMALL_FLASH_MODE) //No support for bluepill here anyway
       //Pin mappings as per the Plazomat In/Out shields Rev 0.1
       pinInjector1 = 8; //Output pin injector 1 is on
       pinInjector2 = 9; //Output pin injector 2 is on
@@ -1352,7 +1377,7 @@ case 3:
       pinIAT = A0; //IAT sensor pin
       pinCLT = A1; //CLS sensor pin
       pinBat = A4; //Battery reference voltage pin
-      pinBaro = A21; //Baro sensor pin
+      pinBaro = A10; //Baro sensor pin
       pinLaunch = 51; //Can be overwritten below
       pinInjector1 = 5; //Output pin injector 1 is on
       pinInjector2 = 6; //Output pin injector 2 is on
@@ -1360,8 +1385,8 @@ case 3:
       pinInjector4 = 8; //Output pin injector 4 is on
       pinInjector5 = 22; //Output pin injector 5 is on
       pinInjector6 = 21; //Output pin injector 6 is on
-      pinInjector7 = 11; //Output pin injector 7 is on
-      pinInjector8 = 12; //Output pin injector 8 is on     
+      pinIdle1 = 11; //Single wire idle control
+      pinIdle2 = 12; //Single wire idle control     
       pinCoil1 = 31; //Pin for coil 1
       pinCoil2 = 38; //Pin for coil 2
       pinCoil3 = 30; //Pin for coil 3
